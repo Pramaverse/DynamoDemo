@@ -23,6 +23,7 @@
         <!--        <java.version>11</java.version>-->
 
         <aws.java.sdk.version>2.17.190</aws.java.sdk.version>
+        <!--        latest 2.17.231-->
     </properties>
 
     <dependencyManagement>
@@ -35,6 +36,7 @@
                 <scope>import</scope>
             </dependency>
         </dependencies>
+
     </dependencyManagement>
 
     <dependencies>
@@ -50,7 +52,6 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>dynamodb-enhanced</artifactId>
-            <version>2.17.123</version>
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
