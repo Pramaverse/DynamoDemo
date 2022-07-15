@@ -83,7 +83,7 @@ public final class DynamoDbRepositoryUtils {
         final List<T> retrievedItems = Collections.synchronizedList(new ArrayList<>());
 
         final List<List<String>> batchOfBatches = Lists.partition(keys, MAX_BATCH_READ_SIZE);
-        System.out.println("Number of batches " + batchOfBatches.size());
+        log.info("Number of batches " + batchOfBatches.size());
         final List<Future<List<T>>> batchFutures = new ArrayList<>(batchOfBatches.size() + 1);
         batchOfBatches.forEach(chunkOfKeys -> batchFutures.add(executorService.submit(
             () -> batchRead(itemType, chunkOfKeys, client, table))));
@@ -91,7 +91,7 @@ public final class DynamoDbRepositoryUtils {
         for (Future<List<T>> batchFuture : batchFutures) {
             try {
                 final List<T> retrieved = batchFuture.get();
-                System.out.println("Number retrieved: " + retrieved.size());
+                log.info("Number retrieved: " + retrieved.size());
                 retrievedItems.addAll(retrieved);
             } catch (Exception e) {
                 log.error("Failed to fully process all batches. Response may be incomplete.", e);
@@ -135,7 +135,7 @@ public final class DynamoDbRepositoryUtils {
                 // some failed (provisioning problems, etc.), so write those again
                 // TODO implement exponential backoff as suggested by AWS?
                 unprocessedItems = batchWrite(itemType, unprocessedItems, client, table);
-                System.out.println("Times looped: " + timesLooped++);
+                log.info("Times looped: " + timesLooped++);
             } while (!unprocessedItems.isEmpty());
         }));
     }
@@ -157,7 +157,7 @@ public final class DynamoDbRepositoryUtils {
             final BatchGetResultPageIterable result = client.batchGetItem(
                 r -> r.addReadBatch(builder.build()));
             final SdkIterable<T> resultsForTable = result.resultsForTable(table);
-            System.out.println("Results for table count: " + resultsForTable.stream().count());
+            log.info("Results for table count: " + resultsForTable.stream().count());
             return resultsForTable.stream().collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Failed to process batch.", e);
