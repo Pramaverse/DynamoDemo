@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.batchPutRecords;
 import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.buildKey;
 import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.getItem;
+import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.partitionedRead;
+import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.partitionedRead2;
 import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.transactGetItems;
 
 @Slf4j
@@ -69,6 +71,14 @@ public class CustomerRepository {
         }
 
         return DynamoDbRepositoryUtils.batchGetItem(enhancedClient, table, builder);
+    }
+
+    public List<Customer> batchGetCustomers3(List<String> keys) {
+        return partitionedRead2(Customer.class, keys, enhancedClient, table);
+    }
+
+    public List<Customer> batchGetCustomers4(List<String> keys) {
+        return partitionedRead(Customer.class, keys, enhancedClient, table);
     }
 
 }
