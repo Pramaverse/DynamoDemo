@@ -1,7 +1,6 @@
 package com.prama.demo.dynamo.repositories;
 
 import com.google.common.collect.Lists;
-import com.prama.demo.dynamo.models.Customer;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.Document;
@@ -193,11 +192,11 @@ public final class DynamoDbRepositoryUtils {
 
     public static <T> List<T> batchGetItem(DynamoDbEnhancedClient client,
                                            DynamoDbTable<T> table,
-                                           ReadBatch.Builder<Customer> builder) {
+                                           ReadBatch.Builder<T> builder) {
         final BatchGetResultPageIterable batchResult =
             client.batchGetItem(r -> r.addReadBatch(builder.build()));
-        final SdkIterable<T> customers = batchResult.resultsForTable(table);
+        final SdkIterable<T> resultsIterable = batchResult.resultsForTable(table);
 
-        return customers.stream().collect(Collectors.toList());
+        return resultsIterable.stream().collect(Collectors.toList());
     }
 }
