@@ -39,7 +39,7 @@ public class CustomerRestController {
 
     @GetMapping("/dyanmo/v1/customers")
     public List<Customer> getCustomers2(@RequestParam List<String> keys) {
-        return customerRepository.batchGetCustomers2(keys);
+        return customerRepository.batchGetCustomers3(keys);
     }
 
     @PostMapping("/dynamo/customers")
@@ -70,7 +70,7 @@ public class CustomerRestController {
             keys.add(createBatchId(i));
         }
 
-        final List<Customer> customers = customerRepository.batchGetCustomers3(keys);
+        final List<Customer> customers = customerRepository.batchGetCustomers2(keys);
         return BatchGetCustomer.builder()
             .customers(customers)
             .requested(count)
@@ -84,7 +84,7 @@ public class CustomerRestController {
         for (int i = 0; i < count; i++) {
             keys.add(createBatchId(i));
         }
-        final List<Customer> customers = customerRepository.batchGetCustomers4(keys);
+        final List<Customer> customers = customerRepository.batchGetCustomers3(keys);
         return BatchGetCustomer.builder()
             .customers(customers)
             .requested(count)

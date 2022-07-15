@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,13 +13,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.batchPutRecords;
-import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.buildKey;
-import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.getItem;
-import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.partitionedRead;
-import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.partitionedRead2;
-import static com.prama.demo.dynamo.repositories.DynamoDbRepositoryUtils.transactGetItems;
 
 @Slf4j
 @Component
@@ -31,9 +23,15 @@ public class CustomerRepository {
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<Customer> table;
+    private final DynamoService dynamoService;
+    private final DynamoThreadPoolService dynamoThreadPoolService;
 
-    public CustomerRepository(DynamoDbEnhancedClient enhancedClient) {
+    public CustomerRepository(DynamoDbEnhancedClient enhancedClient,
+                              DynamoService dynamoService,
+                              DynamoThreadPoolService dynamoThreadPoolService) {
         this.enhancedClient = enhancedClient;
+        this.dynamoService = dynamoService;
+        this.dynamoThreadPoolService = dynamoThreadPoolService;
         table = enhancedClient.table(TABLE_NAME, TableSchema.fromBean(CLASS));
     }
 
@@ -52,33 +50,23 @@ public class CustomerRepository {
             .collect(Collectors.toList());
 
         // Add these two items to the table.
-        batchPutRecords(enhancedClient, table, customers, CLASS);
+        dynamoThreadPoolService.batchPutRecords(table, customers, CLASS);
     }
 
     public Customer getCustomer(String key) {
-        return getItem(key, table);
+        return dynamoThreadPoolService.getItem(key, table);
     }
 
     public List<Customer> batchGetCustomers(List<String> keys) {
-        return transactGetItems(enhancedClient, table, keys);
+        return dynamoThreadPoolService.transactGetItems(table, keys);
     }
 
     public List<Customer> batchGetCustomers2(List<String> keys) {
-        final ReadBatch.Builder<Customer> builder = ReadBatch.builder(Customer.class)
-            .mappedTableResource(table);
-        for (String key : keys) {
-            builder.addGetItem(buildKey(key));
-        }
-
-        return DynamoDbRepositoryUtils.batchGetItem(enhancedClient, table, builder);
+        return dynamoService.partitionedRead(Customer.class, keys, table);
     }
 
     public List<Customer> batchGetCustomers3(List<String> keys) {
-        return partitionedRead2(Customer.class, keys, enhancedClient, table);
-    }
-
-    public List<Customer> batchGetCustomers4(List<String> keys) {
-        return partitionedRead(Customer.class, keys, enhancedClient, table);
+        return dynamoThreadPoolService.partitionedRead(Customer.class, keys, table);
     }
 
 }
